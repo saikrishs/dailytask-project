@@ -1,6 +1,6 @@
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
-const store = require('../storage/jsonStore');
+const store = require('../storage/dbStore');
 const { validateCreate, validateUpdate } = require('../middleware/validateTask');
 const router = express.Router();
 
@@ -18,6 +18,15 @@ router.get('/:id', async (req, res, next) => {
     const task = await store.getById(req.params.id);
     if (!task) return res.status(404).json({ error: 'Not found' });
     res.json(task);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/:id/history', async (req, res, next) => {
+  try {
+    const history = await store.getTaskHistory(req.params.id);
+    res.json(history);
   } catch (err) {
     next(err);
   }
@@ -58,6 +67,17 @@ router.delete('/:id', async (req, res, next) => {
     const removed = await store.deleteTask(req.params.id);
     if (!removed) return res.status(404).json({ error: 'Not found' });
     res.status(204).end();
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/history/all', async (req, res, next) => {
+  try {
+    const limit = parseInt(req.query.limit) || 100;
+    const offset = parseInt(req.query.offset) || 0;
+    const history = await store.getAllHistory(limit, offset);
+    res.json(history);
   } catch (err) {
     next(err);
   }

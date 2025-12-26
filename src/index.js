@@ -1,8 +1,12 @@
 const express = require('express');
 const path = require('path');
+const { initDatabase } = require('./storage/database');
 const tasksRouter = require('./routes/tasks');
 const errorHandler = require('./middleware/errorHandler');
 const app = express();
+
+// Initialize database
+initDatabase();
 
 app.use(express.json());
 
