@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Daily Task Notes</title>
+  <style>
+    :root{
+      --bg:#f5f7fb;
+      --card:#ffffff;
+      --muted:#6b7280;
+      --accent:#2563eb;
+      --primary:#0f172a;
+      --accent-2:#7c3aed;
+      --surface:#f8fafc
+    }
+    html,body{height:100%}
+    body{font-family:Inter,system-ui,Segoe UI,Arial,Helvetica;background:linear-gradient(180deg,var(--bg),#ffffff);margin:0;padding:28px;box-sizing:border-box;color:var(--primary)}
+    .container{max-width:960px;margin:0 auto}
+    header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+    h1{font-size:1.75rem;margin:0;color:var(--accent);letter-spacing:-0.4px;font-weight:800;text-shadow:0 1px 0 rgba(255,255,255,0.6)}
+    h2{font-size:1.1rem;margin:0;color:var(--primary);font-weight:700;border-bottom:2px solid rgba(37,99,235,0.08);padding-bottom:8px}
+    form{background:var(--card);padding:16px;border-radius:12px;box-shadow:0 6px 18px rgba(15,23,42,0.06);margin-bottom:18px}
+    input,textarea{display:block;width:100%;margin:6px 0;padding:10px;border:1px solid #eef3fb;border-radius:10px;font-size:1rem;background:var(--surface)}
+    button{padding:8px 12px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer}
+    button.secondary{background:var(--accent-2)}
+    section{background:transparent}
+    ul#tasks{list-style:none;padding:0;margin:12px 0;display:flex;flex-direction:column;gap:12px}
+    li.task{display:flex;gap:12px;align-items:flex-start;background:var(--card);padding:14px;border-radius:12px;box-shadow:0 4px 12px rgba(15,23,42,0.04);border:1px solid rgba(15,23,42,0.03)}
+    .num{width:40px;height:40px;border-radius:10px;background:linear-gradient(180deg,#eef2ff,#e0f2fe);color:var(--accent);display:inline-flex;align-items:center;justify-content:center;font-weight:700}
+    .content{flex:1}
+    .meta{font-size:0.85em;color:var(--muted);margin-top:6px}
+    .notes{color:var(--muted);margin-top:6px}
+    .actions{display:flex;gap:8px;align-items:center}
+    .actions button{background:transparent;border:1px solid #eef3fb;padding:6px 8px;border-radius:8px;color:var(--primary)}
+    .calendar-controls button{background:transparent;border-radius:8px;padding:6px 8px;border:1px solid #eef3fb}
+    @media (prefers-color-scheme:dark){
+      :root{--bg:#071028;--card:#071127;--muted:#94a3b8;--accent:#60a5fa;--primary:#e6eef8;--accent-2:#b794f4;--surface:#041025}
+      body{color:var(--primary)}
+    }
+  </style>
+</head>
+  <body>
+  <div class="container">
+    <header>
+      <h1>Daily Task Notes</h1>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button id="prevDay" style="background:transparent;border:none;cursor:pointer">◀</button>
+        <input id="selectedDate" type="date" style="padding:6px;border-radius:8px;border:1px solid #e6edf3" />
+        <button id="nextDay" style="background:transparent;border:none;cursor:pointer">▶</button>
+        <button id="today" style="padding:6px 8px;border-radius:8px">Today</button>
+      </div>
+    </header>
+  <form id="taskForm">
+    <input id="title" placeholder="Title (required)" required maxlength="200" />
+    <textarea id="notes" placeholder="Notes (optional)"></textarea>
+    <label for="scheduledAt" style="display:block;margin-top:6px;font-size:0.9em;color:var(--muted)">Schedule (optional)</label>
+    <input id="scheduledAt" type="datetime-local" />
+    <button type="submit">Add Task</button>
+  </form>
+
+  <section>
+    <h2>Tasks</h2>
+    <ul id="tasks"></ul>
+  </section>
+
+  <script>
+    // Simple daily calendar: select a date to view tasks scheduled for that day
+    const selectedDateInput = document.getElementById('selectedDate');
+    const prevDayBtn = document.getElementById('prevDay');
+    const nextDayBtn = document.getElementById('nextDay');
+    const todayBtn = document.getElementById('today');
+
+    function toYMD(d) {
+      const yy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yy}-${mm}-${dd}`;
+    }
+
+    let selectedDate = toYMD(new Date());
+    selectedDateInput.value = selectedDate;
+    selectedDateInput.addEventListener('change', () => { selectedDate = selectedDateInput.value; loadTasks(); });
+    prevDayBtn.onclick = () => { const d = new Date(selectedDate); d.setDate(d.getDate() - 1); selectedDate = toYMD(d); selectedDateInput.value = selectedDate; loadTasks(); };
+    nextDayBtn.onclick = () => { const d = new Date(selectedDate); d.setDate(d.getDate() + 1); selectedDate = toYMD(d); selectedDateInput.value = selectedDate; loadTasks(); };
+    todayBtn.onclick = () => { selectedDate = toYMD(new Date()); selectedDateInput.value = selectedDate; loadTasks(); };
+
+    const form = document.getElementById('taskForm');
+    const list = document.getElementById('tasks');
+
+    async function loadTasks(){
+      list.innerHTML = 'Loading...';
+      const res = await fetch('/tasks');
+      const items = await res.json();
+      if(!Array.isArray(items)) return list.innerHTML = 'Error loading tasks';
+      list.innerHTML = '';
+      // If a date is selected, show tasks scheduled for that day; otherwise show latest 10
+      if (selectedDate) {
+        const filtered = items.filter(t => t.scheduledAt && new Date(t.scheduledAt).toISOString().slice(0,10) === selectedDate);
+        if (filtered.length === 0) {
+          list.innerHTML = `<li class="task">No tasks scheduled for ${selectedDate}</li>`;
+        } else {
+          filtered.forEach((t, idx) => {
+            const li = document.createElement('li'); li.className = 'task';
+            const num = document.createElement('div'); num.className = 'num'; num.textContent = String(idx + 1);
+            const content = document.createElement('div'); content.className = 'content';
+            const title = document.createElement('div'); title.textContent = t.title; title.style.fontWeight = 700;
+            const notes = document.createElement('div'); notes.className = 'notes'; notes.textContent = t.notes || '';
+            const meta = document.createElement('div'); meta.className = 'meta'; meta.textContent = new Date(t.createdAt).toLocaleString();
+            const sched = document.createElement('div'); sched.className = 'meta'; sched.textContent = 'Scheduled: ' + new Date(t.scheduledAt).toLocaleString();
+            sched.style.fontWeight = 600; sched.style.marginTop = '4px';
+            const actions = document.createElement('div'); actions.className = 'actions';
+            const del = document.createElement('button'); del.textContent = 'Delete';
+            del.onclick = async () => {
+              if(!confirm('Delete this task?')) return;
+              await fetch('/tasks/' + t.id, { method: 'DELETE' });
+              loadTasks();
+            };
+            actions.appendChild(del);
+            content.appendChild(title);
+            if((t.notes || '').trim()) content.appendChild(notes);
+            content.appendChild(meta);
+            content.appendChild(sched);
+            li.appendChild(num);
+            li.appendChild(content);
+            li.appendChild(actions);
+            list.appendChild(li);
+          });
+        }
+      } else {
+        items.slice(0, 10).forEach((t, idx) => {
+          const li = document.createElement('li'); li.className = 'task';
+          const num = document.createElement('div'); num.className = 'num'; num.textContent = String(idx + 1);
+          const content = document.createElement('div'); content.className = 'content';
+          const title = document.createElement('div'); title.textContent = t.title; title.style.fontWeight = 700;
+          const notes = document.createElement('div'); notes.className = 'notes'; notes.textContent = t.notes || '';
+          const meta = document.createElement('div'); meta.className = 'meta'; meta.textContent = new Date(t.createdAt).toLocaleString();
+          if (t.scheduledAt) {
+            const sched = document.createElement('div'); sched.className = 'meta'; sched.textContent = 'Scheduled: ' + new Date(t.scheduledAt).toLocaleString();
+            sched.style.fontWeight = 600; sched.style.marginTop = '4px';
+            content.appendChild(sched);
+          }
+          const actions = document.createElement('div'); actions.className = 'actions';
+          const del = document.createElement('button'); del.textContent = 'Delete';
+          del.onclick = async () => {
+            if(!confirm('Delete this task?')) return;
+            await fetch('/tasks/' + t.id, { method: 'DELETE' });
+            loadTasks();
+          };
+          actions.appendChild(del);
+          content.appendChild(title);
+          if((t.notes || '').trim()) content.appendChild(notes);
+          content.appendChild(meta);
+          li.appendChild(num);
+          li.appendChild(content);
+          li.appendChild(actions);
+          list.appendChild(li);
+        });
+      }
+      if(items.length === 0) list.innerHTML = '<li class="task">No tasks yet</li>';
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const title = document.getElementById('title').value.trim();
+      const notes = document.getElementById('notes').value.trim();
+      const scheduledAtInput = document.getElementById('scheduledAt').value;
+      const scheduledAt = scheduledAtInput ? new Date(scheduledAtInput).toISOString() : undefined;
+      if(!title) return alert('Title required');
+      await fetch('/tasks', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ title, notes, scheduledAt })
+      });
+      form.reset();
+      loadTasks();
+    });
+
+    loadTasks();
+  </script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+[
+	{
+		"id": "task-1",
+		"title": "Create e-commerce site",
+		"notes": "Set up product pages, shopping cart, checkout and payment integration",
+		"createdAt": "2025-12-20T09:00:00.000Z"
+	},
+	{
+		"id": "task-2",
+		"title": "Write blog post: JavaScript tips",
+		"notes": "Draft a 1200-word post covering ES6+ features and best practices",
+		"createdAt": "2025-12-21T10:15:00.000Z"
+	},
+	{
+		"id": "task-3",
+		"title": "Design landing page",
+		"notes": "Create hero section, feature list, and CTA; produce mobile-first layout",
+		"createdAt": "2025-12-22T11:30:00.000Z"
+	},
+	{
+		"id": "task-4",
+		"title": "Set up CI/CD pipeline",
+		"notes": "Configure GitHub Actions for test, lint, and deploy steps",
+		"createdAt": "2025-12-22T14:00:00.000Z"
+	},
+	{
+		"id": "task-5",
+		"title": "Prepare slide deck for client demo",
+		"notes": "Outline key features, screenshots, and next steps",
+		"createdAt": "2025-12-23T09:45:00.000Z"
+	},
+	{
+		"id": "task-6",
+		"title": "Research user analytics tools",
+		"notes": "Compare options (Plausible, GA4, Mixpanel) and recommend one",
+		"createdAt": "2025-12-23T12:10:00.000Z"
+	},
+	{
+		"id": "task-7",
+		"title": "Implement dark mode",
+		"notes": "Add theme toggle and persist preference in localStorage",
+		"createdAt": "2025-12-24T08:20:00.000Z"
+	},
+	{
+		"id": "task-8",
+		"title": "Optimize images and assets",
+		"notes": "Add responsive images, compress and enable caching headers",
+		"createdAt": "2025-12-24T15:30:00.000Z"
+	},
+	{
+		"id": "task-9",
+		"title": "Refactor authentication module",
+		"notes": "Replace custom token code with OAuth2 library and add tests",
+		"createdAt": "2025-12-25T10:00:00.000Z"
+	},
+	{
+		"id": "task-10",
+		"title": "Plan next sprint",
+		"notes": "Create backlog, estimate items, and assign priorities",
+		"createdAt": "2025-12-25T16:45:00.000Z"
+	}
+]
